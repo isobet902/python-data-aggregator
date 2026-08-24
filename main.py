@@ -3,11 +3,7 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 
-# Windows用の日本語フォント設定
-# 特定のフォント名ではなく、Windows標準のゴシック体群を自動検索させる設定
-plt.rcParams['font.family'] = 'sans-serif'
-plt.rcParams['font.sans-serif'] = ['MS Gothic', 'Meiryo', 'Yu Gothic', 'Japanize DejaVu Sans']
-
+import japanize_matplotlib  # これだけでOK、rcParamsの手動設定は削除
 # ログの設定
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 

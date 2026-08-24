@@ -1,8 +1,10 @@
 import logging
 import os
 import matplotlib.pyplot as plt
-import japanize_matplotlib  # これだけで日本語化されます
 import pandas as pd
+
+# Windowsの標準日本語フォントを指定（MS Gothic）
+plt.rcParams['font.family'] = 'MS Gothic'
 
 # ログの設定（実行状況を記録する）
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

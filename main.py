@@ -1,6 +1,8 @@
 import logging
 import os
 import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+import japanize_matplotlib  # ← これを追加
 import pandas as pd
 
 # Windows用：日本語フォントの設定（豆腐化対策）

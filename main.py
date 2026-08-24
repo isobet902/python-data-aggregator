@@ -3,14 +3,12 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 
-# Windowsの標準日本語フォントを指定（MS Gothic）
+# Windows用の日本語フォント設定
 plt.rcParams['font.family'] = 'MS Gothic'
 
-# ログの設定（実行状況を記録する）
+# ログの設定
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# ログの設定（実行状況を記録する）
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def process_sales_data(input_file, output_csv, output_graph):
     try:
@@ -34,15 +32,17 @@ def process_sales_data(input_file, output_csv, output_graph):
         # グラフ化して画像出力
         plt.figure(figsize=(6, 4))
         plt.bar(summary['カテゴリ'], summary['売上高'])
-        plt.title('Sales by Category')
-        plt.xlabel('Category')
-        plt.ylabel('Sales')
+        plt.title('カテゴリ別売上高')
+        plt.xlabel('カテゴリ')
+        plt.ylabel('売上高')
         plt.tight_layout()
         plt.savefig(output_graph)
+        plt.close()  # メモリ解放
         logging.info(f"グラフを {output_graph} に保存しました。")
 
     except Exception as e:
         logging.error(f"エラーが発生しました: {e}")
+
 
 if __name__ == "__main__":
     process_sales_data('data.csv', 'summary.csv', 'chart.png')

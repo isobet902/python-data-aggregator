@@ -12,7 +12,6 @@ with st.expander("📋 使い方(どんなファイルが必要?)", expanded=Tru
         "がわかるデータから、カテゴリ別の売上高を自動で計算してグラフ化します。"
     )
 
-    # 図解(SVG):商品 → 属性(カテゴリ・数量・単価) → 売上高の計算、という流れを示す
     diagram_svg = """
     <svg width="100%" height="150" viewBox="0 0 620 150" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -65,7 +64,6 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file is not None:
 
-    # 拡張子を見て、CSVかExcelかで読み込み方法を切り替える
     if uploaded_file.name.lower().endswith((".xlsx", ".xls")):
         df_raw = pd.read_excel(uploaded_file)
     else:
@@ -86,7 +84,6 @@ if uploaded_file is not None:
         quantity_col = st.selectbox("「数量」に対応する列", columns)
         price_col = st.selectbox("「単価」に対応する列", columns)
 
-    # 同じ列を重複して選んでいないかチェック
     selected = [category_col, quantity_col, price_col]
     if date_col != none_option:
         selected.append(date_col)
@@ -95,7 +92,6 @@ if uploaded_file is not None:
         st.error("同じ列を複数の項目に割り当てています。それぞれ別の列を選んでください。")
         st.stop()
 
-    # 選んだ列名を、プログラム内部で使う名前(日付・カテゴリ・数量・単価)に統一する
     rename_map = {
         category_col: "カテゴリ",
         quantity_col: "数量",
@@ -106,7 +102,6 @@ if uploaded_file is not None:
 
     df = df_raw.rename(columns=rename_map)
 
-    # 数量・単価が数値として扱えるか変換(文字が混ざっていたらエラー値=NaNになる)
     df["数量"] = pd.to_numeric(df["数量"], errors="coerce")
     df["単価"] = pd.to_numeric(df["単価"], errors="coerce")
 
@@ -115,7 +110,8 @@ if uploaded_file is not None:
         df = df.dropna(subset=["数量", "単価"])
 
     # --- 3. 日付フィルタ機能(日付列を選んだ場合のみ表示) ---
-    if date_col != none_option:
+    has_date = date_col != none_option
+    if has_date:
         df["日付"] = pd.to_datetime(df["日付"], errors="coerce")
         df = df.dropna(subset=["日付"])
 
@@ -138,6 +134,14 @@ if uploaded_file is not None:
         st.subheader("集計結果")
         st.write(summary.to_html(index=False), unsafe_allow_html=True)
 
+        # 集計結果CSVのダウンロード
+        st.download_button(
+            label="📥 集計結果をCSVでダウンロード",
+            data=summary.to_csv(index=False).encode("utf-8-sig"),
+            file_name="summary.csv",
+            mime="text/csv",
+        )
+
         st.subheader("カテゴリ別売上高")
         fig = px.bar(
             summary,
@@ -147,6 +151,65 @@ if uploaded_file is not None:
             text_auto=True,
         )
         st.plotly_chart(fig, use_container_width=True)
+
+        # グラフをインタラクティブなHTMLとして保存(拡大・ズームなどの機能ごと保存できる)
+        st.download_button(
+            label="📥 このグラフをHTMLで保存(拡大・ズームなどそのまま使えます)",
+            data=fig.to_html(),
+            file_name="category_chart.html",
+            mime="text/html",
+        )
+
+        # --- 5. 日別売上の推移と異常値の自動検出(日付を使っている場合のみ) ---
+        if has_date:
+            st.divider()
+            st.subheader("📈 日別売上の推移(Excelでは手間がかかる分析)")
+
+            daily_sales = df.groupby(df["日付"].dt.date)["売上高"].sum().reset_index()
+            daily_sales.columns = ["日付", "日別売上高"]
+            daily_sales = daily_sales.sort_values("日付")
+
+            fig2 = px.line(
+                daily_sales, x="日付", y="日別売上高", markers=True,
+                title="日別売上高の推移",
+            )
+            st.plotly_chart(fig2, use_container_width=True)
+
+            st.download_button(
+                label="📥 日別推移グラフをHTMLで保存",
+                data=fig2.to_html(),
+                file_name="daily_trend_chart.html",
+                mime="text/html",
+            )
+
+            # IQR(四分位範囲)法による異常値の自動検出
+            if len(daily_sales) >= 4:
+                q1 = daily_sales["日別売上高"].quantile(0.25)
+                q3 = daily_sales["日別売上高"].quantile(0.75)
+                iqr = q3 - q1
+                lower_bound = q1 - 1.5 * iqr
+                upper_bound = q3 + 1.5 * iqr
+                avg = daily_sales["日別売上高"].mean()
+
+                outliers = daily_sales[
+                    (daily_sales["日別売上高"] < lower_bound) | (daily_sales["日別売上高"] > upper_bound)
+                ]
+
+                st.subheader("⚠️ 統計的に見て、特に売上が多い/少ない日")
+                st.caption("IQR(四分位範囲)という統計的な手法で、平均的な範囲から外れている日を自動検出しています。")
+
+                if not outliers.empty:
+                    for _, row in outliers.iterrows():
+                        ratio = row["日別売上高"] / avg if avg else 0
+                        if row["日別売上高"] > upper_bound:
+                            st.warning(f"**{row['日付']}**:売上高が平均の約 **{ratio:.1f}倍**({row['日別売上高']:,.0f}円)と、特に多い日でした。")
+                        else:
+                            st.info(f"**{row['日付']}**:売上高が平均の約 **{ratio:.1f}倍**({row['日別売上高']:,.0f}円)と、特に少ない日でした。")
+                else:
+                    st.caption("統計的に見て、特に外れた売上の日は見つかりませんでした。")
+            else:
+                st.caption("日別の異常値を検出するには、もう少し日数分のデータが必要です(4日分以上を推奨)。")
+
     else:
         st.warning("指定された条件に一致するデータがありません。")
 

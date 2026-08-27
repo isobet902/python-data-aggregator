@@ -5,6 +5,58 @@ import plotly.express as px
 st.title("📊 売上データ集計＆グラフ化ツール")
 st.caption("CSVまたはExcelファイルをアップロードし、カテゴリ別の売上を集計・グラフ化します。列名が違っていても、あとで対応を選べます。")
 
+# --- 0. 使い方の説明(図解) ---
+with st.expander("📋 使い方(どんなファイルが必要?)", expanded=True):
+    st.markdown(
+        "このツールは、**「1つの商品が、どのカテゴリに属していて、いくつ・いくらで売れたか」**"
+        "がわかるデータから、カテゴリ別の売上高を自動で計算してグラフ化します。"
+    )
+
+    # 図解(SVG):商品 → 属性(カテゴリ・数量・単価) → 売上高の計算、という流れを示す
+    diagram_svg = """
+    <svg width="100%" height="150" viewBox="0 0 620 150" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <rect x="10" y="45" width="130" height="60" rx="8" fill="#eef2ff" stroke="#4f46e5"/>
+      <text x="75" y="70" font-size="14" text-anchor="middle" fill="#1e293b">商品名</text>
+      <text x="75" y="90" font-size="12" text-anchor="middle" fill="#475569">(例: ルンバ)</text>
+
+      <line x1="140" y1="75" x2="190" y2="75" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <rect x="200" y="10" width="150" height="35" rx="8" fill="#ecfdf5" stroke="#059669"/>
+      <text x="275" y="33" font-size="13" text-anchor="middle" fill="#065f46">カテゴリ: 家電</text>
+
+      <rect x="200" y="57" width="150" height="35" rx="8" fill="#ecfdf5" stroke="#059669"/>
+      <text x="275" y="80" font-size="13" text-anchor="middle" fill="#065f46">数量: 1</text>
+
+      <rect x="200" y="104" width="150" height="35" rx="8" fill="#ecfdf5" stroke="#059669"/>
+      <text x="275" y="127" font-size="13" text-anchor="middle" fill="#065f46">単価: 50,000円</text>
+
+      <line x1="350" y1="75" x2="400" y2="75" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <rect x="410" y="45" width="200" height="60" rx="8" fill="#fef3c7" stroke="#d97706"/>
+      <text x="510" y="68" font-size="13" text-anchor="middle" fill="#92400e">売上高 = 単価 × 数量</text>
+      <text x="510" y="88" font-size="12" text-anchor="middle" fill="#92400e">→ カテゴリ別に合計</text>
+    </svg>
+    """
+    st.markdown(diagram_svg, unsafe_allow_html=True)
+
+    st.markdown("**こんな形式のファイルが読み込めます(列名は多少違っていても、あとで対応を選べます)**")
+    example_df = pd.DataFrame({
+        "日付": ["2026-08-01", "2026-08-01", "2026-08-02"],
+        "商品名": ["ルンバ", "マウス", "デスク"],
+        "カテゴリ": ["家電", "家電", "家具"],
+        "数量": [1, 5, 1],
+        "単価": [50000, 3000, 25000],
+    })
+    st.dataframe(example_df, hide_index=True)
+    st.caption("つまり、1行が「1つの商品の記録」になっていて、「カテゴリ」「数量」「単価」の3つの情報が読み取れれば大丈夫です。日付は無くても集計できます。")
+
+
 # --- 1. ファイルアップロード機能(CSV / Excel 両対応) ---
 uploaded_file = st.file_uploader(
     "CSVまたはExcelファイルをアップロードしてください",

@@ -53,9 +53,9 @@ with st.expander("📋 使い方(どんなファイルが必要?)", expanded=Tru
         "単価": [50000, 3000, 25000, 15000, 20],
     })
     st.dataframe(example_df, hide_index=True)
-    st.caption("つまり、1行が「1つの商品の記録」になっていて、「カテゴリ」「数量」「単価」の3つの情報が読み取れれば大丈夫です。日付は無くても集計できます。")
+    st.caption("1行が「1つの商品の記録」になっていて、「カテゴリ」「数量」「単価」の3つの情報が読み取れれば大丈夫です。日付は無くても集計できます。")
     st.markdown("---")
-    st.markdown("**実際にファイルをアップロードすると、こんなグラフが出力されます**")
+    st.markdown("**上記のファイルをアップロードすると、以下のグラフと、外れ値の検出結果が出力されます**")
 
     example_df["売上高"] = example_df["数量"] * example_df["単価"]
     example_category = example_df.groupby("カテゴリ")["売上高"].sum().reset_index()

@@ -46,21 +46,40 @@ with st.expander("📋 使い方(どんなファイルが必要?)", expanded=Tru
 
     st.markdown("**こんな形式のファイルが読み込めます(列名は多少違っていても、あとで対応を選べます)**")
     example_df = pd.DataFrame({
-        "日付": ["2026-08-01", "2026-08-01", "2026-08-02"],
-        "商品名": ["ルンバ", "マウス", "デスク"],
-        "カテゴリ": ["家電", "家電", "家具"],
-        "数量": [1, 5, 1],
-        "単価": [50000, 3000, 25000],
+        "日付": ["2026-08-01", "2026-08-01", "2026-08-02", "2026-08-03","2026-08-04"],
+        "商品名": ["ルンバ", "マウス", "デスク","椅子","ペン"],
+        "カテゴリ": ["家電", "家電", "家具", "家具", "文房具"],
+        "数量": [1, 5, 1, 2, 100],
+        "単価": [50000, 3000, 25000, 15000, 20],
     })
     st.dataframe(example_df, hide_index=True)
     st.caption("つまり、1行が「1つの商品の記録」になっていて、「カテゴリ」「数量」「単価」の3つの情報が読み取れれば大丈夫です。日付は無くても集計できます。")
     st.markdown("---")
     st.markdown("**実際にファイルをアップロードすると、こんなグラフが出力されます**")
+
+    example_df["売上高"] = example_df["数量"] * example_df["単価"]
+    example_category = example_df.groupby("カテゴリ")["売上高"].sum().reset_index()
+    example_daily = example_df.groupby("日付")["売上高"].sum().reset_index()
+
     img_col1, img_col2 = st.columns(2)
     with img_col1:
-        st.image("chart.png", caption="カテゴリ別売上高", use_container_width=True)
+            fig_sample1 = px.bar(
+                example_category,
+                x="カテゴリ",
+                y="売上高",
+                title="カテゴリ別売上高",
+                text_auto=True,
+            )
+            st.plotly_chart(fig_sample1, use_container_width=True, key="sample_category_chart")
     with img_col2:
-        st.image("chart2.png", caption="日別売上高の推移(異常値も自動検出)", use_container_width=True)
+            fig_sample2 = px.line(
+                example_daily,
+                x="日付",
+                y="売上高",
+                title="日別売上高の推移",
+                markers=True,
+            )
+            st.plotly_chart(fig_sample2, use_container_width=True, key="sample_daily_chart")
 
 # --- 1. ファイルアップロード機能(CSV / Excel 両対応) ---
 uploaded_file = st.file_uploader(

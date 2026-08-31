@@ -54,7 +54,13 @@ with st.expander("📋 使い方(どんなファイルが必要?)", expanded=Tru
     })
     st.dataframe(example_df, hide_index=True)
     st.caption("つまり、1行が「1つの商品の記録」になっていて、「カテゴリ」「数量」「単価」の3つの情報が読み取れれば大丈夫です。日付は無くても集計できます。")
-
+    st.markdown("---")
+    st.markdown("**実際にファイルをアップロードすると、こんなグラフが出力されます**")
+    img_col1, img_col2 = st.columns(2)
+    with img_col1:
+        st.image("chart.png", caption="カテゴリ別売上高", use_container_width=True)
+    with img_col2:
+        st.image("chart2.png", caption="日別売上高の推移(異常値も自動検出)", use_container_width=True)
 
 # --- 1. ファイルアップロード機能(CSV / Excel 両対応) ---
 uploaded_file = st.file_uploader(

@@ -80,7 +80,31 @@ with st.expander("📋 使い方(どんなファイルが必要?)", expanded=Tru
                 markers=True,
             )
             st.plotly_chart(fig_sample2, use_container_width=True, key="sample_daily_chart")
+    # サンプルデータの外れ値検出(本体と同じIQRロジック)
+    if len(example_daily) >= 4:
+            eq1 = example_daily["売上高"].quantile(0.25)
+            eq3 = example_daily["売上高"].quantile(0.75)
+            eiqr = eq3 - eq1
+            elower = eq1 - 1.5 * eiqr
+            eupper = eq3 + 1.5 * eiqr
 
+            example_outliers = example_daily[
+                (example_daily["売上高"] < elower) | (example_daily["売上高"] > eupper)
+            ]
+
+            st.markdown("**⚠️ 統計的に見て、特に売上が多い/少ない日**")
+            st.caption("IQR(四分位範囲)という統計的な手法で、平均的な範囲から外れている日を自動検出しています。")
+
+    if not example_outliers.empty:
+                eavg = example_daily["売上高"].mean()
+                for _, erow in example_outliers.iterrows():
+                    eratio = erow["売上高"] / eavg if eavg else 0
+                    if erow["売上高"] > eupper:
+                        st.warning(f"**{erow['日付']}**:売上高が平均の約**{eratio:.1f}倍**({erow['売上高']:,.0f}円)と、特に多い日でした。")
+                    else:
+                        st.info(f"**{erow['日付']}**:売上高が平均の約**{eratio:.1f}倍**({erow['売上高']:,.0f}円)と、特に少ない日でした。")
+    else:
+                st.caption("統計的に見て、特に外れた売上の日は見つかりませんでした。")
 # --- 1. ファイルアップロード機能(CSV / Excel 両対応) ---
 uploaded_file = st.file_uploader(
     "CSVまたはExcelファイルをアップロードしてください",

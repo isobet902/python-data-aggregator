@@ -1,6 +1,17 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import kaleido
+
+@st.cache_resource
+def ensure_chrome():
+    try:
+        kaleido.get_chrome_sync()
+    except Exception:
+        pass
+    return True
+
+ensure_chrome()
 
 st.title("📊 売上データ集計＆グラフ化ツール")
 st.caption("CSVまたはExcelファイルをアップロードし、カテゴリ別の売上を集計・グラフ化します。列名が違っていても、あとで対応を選べます。")

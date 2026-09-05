@@ -208,6 +208,12 @@ if uploaded_file is not None:
             file_name="category_chart.html",
             mime="text/html",
         )
+        st.download_button(
+            label="📄 このグラフをPDFで保存",
+            data=fig.to_image(format="pdf"),
+            file_name="category_chart.pdf",
+            mime="application/pdf",
+        )
 
         # --- 5. 日別売上の推移と異常値の自動検出(日付を使っている場合のみ) ---
         if has_date:
@@ -230,7 +236,12 @@ if uploaded_file is not None:
                 file_name="daily_trend_chart.html",
                 mime="text/html",
             )
-
+            st.download_button(
+                label="📄 日別推移グラフをPDFで保存",
+                data=fig2.to_image(format="pdf"),
+                file_name="daily_trend_chart.pdf",
+                mime="application/pdf",
+           )
             # IQR(四分位範囲)法による異常値の自動検出
             if len(daily_sales) >= 4:
                 q1 = daily_sales["日別売上高"].quantile(0.25)

@@ -1,17 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import kaleido
 
-@st.cache_resource
-def ensure_chrome():
-    try:
-        kaleido.get_chrome_sync()
-    except Exception:
-        pass
-    return True
-
-ensure_chrome()
 
 st.title("📊 売上データ集計＆グラフ化ツール")
 st.caption("CSVまたはExcelファイルをアップロードし、カテゴリ別の売上を集計・グラフ化します。列名が違っていても、あとで対応を選べます。")
@@ -219,11 +209,11 @@ if uploaded_file is not None:
             file_name="category_chart.html",
             mime="text/html",
         )
-        st.download_button(
-            label="📄 このグラフをPDFで保存",
-            data=fig.to_image(format="pdf"),
-            file_name="category_chart.pdf",
-            mime="application/pdf",
+        st.caption("📷 グラフ右上のカメラアイコンで、PNG画像として保存できます(Wordやスライドにそのまま貼れます)")
+        st.plotly_chart(
+            fig,
+            use_container_width=True,
+            config={"toImageButtonOptions": {"format": "png", "filename": "category_chart", "scale": 2}},
         )
 
         # --- 5. 日別売上の推移と異常値の自動検出(日付を使っている場合のみ) ---
@@ -247,12 +237,12 @@ if uploaded_file is not None:
                 file_name="daily_trend_chart.html",
                 mime="text/html",
             )
-            st.download_button(
-                label="📄 日別推移グラフをPDFで保存",
-                data=fig2.to_image(format="pdf"),
-                file_name="daily_trend_chart.pdf",
-                mime="application/pdf",
-           )
+            st.caption("📷 グラフ右上のカメラアイコンで、PNG画像として保存できます(Wordやスライドにそのまま貼れます)")
+            st.plotly_chart(
+                fig2,
+                use_container_width=True,
+                config={"toImageButtonOptions": {"format": "png", "filename": "daily_trend_chart", "scale": 2}},
+            )
             # IQR(四分位範囲)法による異常値の自動検出
             if len(daily_sales) >= 4:
                 q1 = daily_sales["日別売上高"].quantile(0.25)

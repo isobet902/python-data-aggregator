@@ -191,7 +191,8 @@ if uploaded_file is not None:
             file_name="summary.csv",
             mime="text/csv",
         )
-
+        #display the bar chart using plotly
+        #define the component of bar chart
         st.subheader("カテゴリ別売上高")
         fig = px.bar(
             summary,
@@ -200,26 +201,27 @@ if uploaded_file is not None:
             title="カテゴリ別売上高",
             text_auto=True,
         )
-
-        # グラフをインタラクティブなHTMLとして保存(拡大・ズームなどの機能ごと保存できる)
+        #import the function to save the chart as png and html
+        st.caption("📷 グラフ右上のカメラアイコンで、PNG画像として保存できます(Wordやスライドにそのまま貼れます)")
+        #display the bar chart using plotly 
+        st.plotly_chart(
+            fig,
+            use_container_width=True,
+            config={"toImageButtonOptions": {"format": "png", "filename": "category_chart", "scale": 2}},
+        )
+        # propose saving the chart as html for further analysis
         st.download_button(
             label="📥 このグラフをHTMLで保存(拡大・ズームなどそのまま使えます)",
             data=fig.to_html(),
             file_name="category_chart.html",
             mime="text/html",
         )
-        st.caption("📷 グラフ右上のカメラアイコンで、PNG画像として保存できます(Wordやスライドにそのまま貼れます)")
-        st.plotly_chart(
-            fig,
-            use_container_width=True,
-            config={"toImageButtonOptions": {"format": "png", "filename": "category_chart", "scale": 2}},
-        )
 
-        # --- 5. 日別売上の推移と異常値の自動検出(日付を使っている場合のみ) ---
+        # 5. 日別売上の推移と異常値の自動検出(日付を使っている場合のみ)
         if has_date:
             st.divider()
             st.subheader("📈 日別売上の推移(Excelでは手間がかかる分析)")
-
+            #define the component to make the line daily sales chart
             daily_sales = df.groupby(df["日付"].dt.date)["売上高"].sum().reset_index()
             daily_sales.columns = ["日付", "日別売上高"]
             daily_sales = daily_sales.sort_values("日付")
@@ -228,35 +230,43 @@ if uploaded_file is not None:
                 daily_sales, x="日付", y="日別売上高", markers=True,
                 title="日別売上高の推移",
             )
-        
+            #hoe about doenloading this chart as png or html?
+            st.caption("📷 グラフ右上のカメラアイコンで、PNG画像として保存できます(Wordやスライドにそのまま貼れます)")
+            #I'll give you the daily sales chart
+            st.plotly_chart(
+                fig2,
+                use_container_width=True,
+                config={"toImageButtonOptions": {"format": "png", "filename": "daily_trend_chart", "scale": 2}},
+            )
+            # propose saving the chart as html for further analysis
             st.download_button(
                 label="📥 日別推移グラフをHTMLで保存",
                 data=fig2.to_html(),
                 file_name="daily_trend_chart.html",
                 mime="text/html",
             )
-            st.caption("📷 グラフ右上のカメラアイコンで、PNG画像として保存できます(Wordやスライドにそのまま貼れます)")
-            st.plotly_chart(
-                fig2,
-                use_container_width=True,
-                config={"toImageButtonOptions": {"format": "png", "filename": "daily_trend_chart", "scale": 2}},
-            )
             # IQR(四分位範囲)法による異常値の自動検出
             if len(daily_sales) >= 4:
+                #第一四分位数を求める
                 q1 = daily_sales["日別売上高"].quantile(0.25)
+                #第三四分位数を求める
                 q3 = daily_sales["日別売上高"].quantile(0.75)
+                #てなわけでIQRが求める
                 iqr = q3 - q1
+                #こっから下(この値は含めない)は外れ値となる値を求める
                 lower_bound = q1 - 1.5 * iqr
+                #こっから上(この値は含めない)は外れ値となる値を求める
                 upper_bound = q3 + 1.5 * iqr
+                #avgという変数を導入して、外れ値に対する理解をわかりやすくする
                 avg = daily_sales["日別売上高"].mean()
-
+                #import a variable outliers
                 outliers = daily_sales[
                     (daily_sales["日別売上高"] < lower_bound) | (daily_sales["日別売上高"] > upper_bound)
                 ]
 
                 st.subheader("⚠️ 統計的に見て、特に売上が多い/少ない日")
                 st.caption("IQR(四分位範囲)という統計的な手法で、平均的な範囲から外れている日を自動検出しています。")
-
+                #explaon the outliers with the ratio of the average
                 if not outliers.empty:
                     for _, row in outliers.iterrows():
                         ratio = row["日別売上高"] / avg if avg else 0
@@ -267,7 +277,7 @@ if uploaded_file is not None:
                 else:
                     st.caption("統計的に見て、特に外れた売上の日は見つかりませんでした。")
             else:
-                st.caption("日別の異常値を検出するには、もう少し日数分のデータが必要です(4日分以上を推奨)。")
+                st.caption("日別の異常値を検出するには、少なくとも4日分のデータが必要です(4日分以上を推奨)。")
 
     else:
         st.warning("指定された条件に一致するデータがありません。")

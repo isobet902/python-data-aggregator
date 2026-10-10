@@ -6,13 +6,13 @@ import plotly.express as px
 st.title("📊 売上データ集計＆グラフ化ツール")
 st.caption("CSVまたはExcelファイルをアップロードし、カテゴリ別の売上を集計・グラフ化します。列名が違っていても、あとで対応を選べます。")
 
-# --- 0. 使い方の説明(図解) ---
+# 0.kindly explain how to use this app for the user for the first time
 with st.expander("📋 使い方(どんなファイルが必要?)", expanded=True):
     st.markdown(
         "このツールは、**「1つの商品が、どのカテゴリに属していて、いくつ・いくらで売れたか」**"
         "がわかるデータから、カテゴリ別の売上高を自動で計算してグラフ化します。"
     )
-
+    #with the help of figure
     diagram_svg = """
     <svg width="100%" height="150" viewBox="0 0 620 150" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -43,9 +43,11 @@ with st.expander("📋 使い方(どんなファイルが必要?)", expanded=Tru
       <text x="510" y="88" font-size="12" text-anchor="middle" fill="#92400e">→ カテゴリ別に合計</text>
     </svg>
     """
+    #I'll show you how to use this web application with easy example
     st.markdown(diagram_svg, unsafe_allow_html=True)
-
+    #anyway,what do we just need to use this app?
     st.markdown("**こんな形式のファイルが読み込めます(列名は多少違っていても、あとで対応を選べます)**")
+    #Okay,look at this algorithm before complaining about every little thing
     example_df = pd.DataFrame({
         "日付": ["2026-08-01", "2026-08-01", "2026-08-02", "2026-08-03","2026-08-04"],
         "商品名": ["ルンバ", "マウス", "デスク","椅子","ペン"],
@@ -57,7 +59,7 @@ with st.expander("📋 使い方(どんなファイルが必要?)", expanded=Tru
     st.caption("1行が「1つの商品の記録」になっていて、「カテゴリ」「数量」「単価」の3つの情報が読み取れれば大丈夫です。日付は無くても集計できます。")
     st.markdown("---")
     st.markdown("**上記のファイルをアップロードすると、以下のグラフと、外れ値の検出結果が出力されます**")
-
+    #Based on above,you realize what you need to utilize thia app, right? Let's see the output of this example data
     example_df["売上高"] = example_df["数量"] * example_df["単価"]
     example_category = example_df.groupby("カテゴリ")["売上高"].sum().reset_index()
     example_daily = example_df.groupby("日付")["売上高"].sum().reset_index()
@@ -81,7 +83,7 @@ with st.expander("📋 使い方(どんなファイルが必要?)", expanded=Tru
                 markers=True,
             )
             st.plotly_chart(fig_sample2, use_container_width=True, key="sample_daily_chart")
-    # サンプルデータの外れ値検出(本体と同じIQRロジック)
+    # サンプルデータの外れ値検出　しめす段階でもプログラムを動かしてる
     if len(example_daily) >= 4:
             eq1 = example_daily["売上高"].quantile(0.25)
             eq3 = example_daily["売上高"].quantile(0.75)
@@ -106,7 +108,8 @@ with st.expander("📋 使い方(どんなファイルが必要?)", expanded=Tru
                         st.info(f"**{erow['日付']}**:売上高が平均の約**{eratio:.1f}倍**({erow['売上高']:,.0f}円)と、特に少ない日でした。")
     else:
                 st.caption("統計的に見て、特に外れた売上の日は見つかりませんでした。")
-# --- 1. ファイルアップロード機能(CSV / Excel 両対応) ---
+# 1.you should try it for yourself,sincerely
+# import a variable uploaded_file  
 uploaded_file = st.file_uploader(
     "CSVまたはExcelファイルをアップロードしてください",
     type=["csv", "xlsx", "xls"],
@@ -119,9 +122,9 @@ if uploaded_file is not None:
     else:
         df_raw = pd.read_csv(uploaded_file)
 
-    # --- 2. 列名マッピング機能 ---
+    # 2.everryone who has the file that has the row that indicates the date, category, quantity and price can use this app
     st.subheader("列の対応を選んでください")
-    st.caption("アップロードしたファイルの列名が「日付・カテゴリ・数量・単価」と違っていても大丈夫です。どの列が何にあたるか選んでください。")
+    st.caption("アップロードしたファイルの列名が「日付・カテゴリ・数量・単価」と違っていても大丈夫です。どの列が何に対応しているか選んでください。")
 
     columns = list(df_raw.columns)
     none_option = "(使用しない)"
@@ -159,16 +162,16 @@ if uploaded_file is not None:
         st.warning("「数量」または「単価」に数値として読み取れない値が含まれていたため、該当行を除外しました。")
         df = df.dropna(subset=["数量", "単価"])
 
-    # --- 3. 日付フィルタ機能(日付列を選んだ場合のみ表示) ---
+    # 3.if you have the column that indicates the date,you can choose the start date and end date  
     has_date = date_col != none_option
     if has_date:
         df["日付"] = pd.to_datetime(df["日付"], errors="coerce")
         df = df.dropna(subset=["日付"])
 
-        if not df.empty:
+        if not df.empty:#please choose the start date and end date
             min_date = df["日付"].min().date()
             max_date = df["日付"].max().date()
-
+            #thank you for choosing,I'll show you the filtered date on sidebar
             st.sidebar.header("フィルタ設定")
             start_date = st.sidebar.date_input("開始日", min_date, min_value=min_date, max_value=max_date)
             end_date = st.sidebar.date_input("終了日", max_date, min_value=min_date, max_value=max_date)

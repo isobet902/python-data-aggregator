@@ -200,7 +200,6 @@ if uploaded_file is not None:
             title="カテゴリ別売上高",
             text_auto=True,
         )
-        st.plotly_chart(fig, use_container_width=True)
 
         # グラフをインタラクティブなHTMLとして保存(拡大・ズームなどの機能ごと保存できる)
         st.download_button(
@@ -229,8 +228,7 @@ if uploaded_file is not None:
                 daily_sales, x="日付", y="日別売上高", markers=True,
                 title="日別売上高の推移",
             )
-            st.plotly_chart(fig2, use_container_width=True)
-
+        
             st.download_button(
                 label="📥 日別推移グラフをHTMLで保存",
                 data=fig2.to_html(),
